@@ -7,3 +7,5 @@
 !*.cpp
 !*.h
 !*.png
+!*.pdf
+!*.txt
