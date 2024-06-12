@@ -14,10 +14,10 @@
 # 	rm *.o register
 
 all: mailbox.o
-	g++ mailbox.o -o mailbox
+	gcc mailbox.o -o mailbox
 
-mailbox.o: mailbox.cpp
-	g++ -Wall -c mailbox.cpp -o mailbox.o
+mailbox.o: mailbox.c
+	gcc -Wall -c mailbox.c -o mailbox.o
 
 clean: 
 	rm *.o mailbox

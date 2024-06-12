@@ -131,7 +131,9 @@ int main(int argc, char *argv[]) {
         pthread_create(&resend_thread, NULL, &resend, NULL);
     }
 
-    FILE *file = fopen("ex1.txt", "r");
+    // get data from the file INPUT.txt.
+    // NOTE: this file uses the example strings provided by the assignment doc.
+    FILE *file = fopen("INPUT.txt", "r");
     if (file == NULL) {
         printf("File not found\n");
         exit(1);
