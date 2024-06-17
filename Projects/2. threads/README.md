@@ -4,8 +4,8 @@ This project uses a system of semaphores and mailboxes to add up values. Each th
 
 ## What it does
 
-- This program reads values from INPUT.txt, formatted in pairs of two where the first number is the value and the second is the thread.
-  - [Input.txt](./INPUT.txt)
+- This program reads values from the command line, formatted in pairs of two where the first number is the value and the second is the thread.
+- use the EOF command, ctrl + D to signify you're complete.
 
 ## Compiling
 

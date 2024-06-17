@@ -131,32 +131,36 @@ int main(int argc, char *argv[]) {
         pthread_create(&resend_thread, NULL, &resend, NULL);
     }
 
-    // get data from the file INPUT.txt.
-    // NOTE: this file uses the example strings provided by the assignment doc.
-    FILE *file = fopen("INPUT.txt", "r");
-    if (file == NULL) {
-        printf("File not found\n");
-        exit(1);
-    }
+    // get data from user
+    int v, t;
+    char buffer[100];
 
-    int thread, value;
+    while (1){
+        if(fgets(buffer, sizeof(buffer), stdin) == NULL){//used ctrl+D
+            break;
+        }
+        if(sscanf(buffer, "%d %d", &v, &t) != 2){ // bad input/empty
+            break;
+        };
 
-    while (fscanf(file, "%d %d", &value, &thread) > 0) {
         msg m;
+        if(t > numThreads){
+            printf("%d is larger than the maximum thread allocated, %d\n", t, numThreads);
+            continue;
+        }
         m.iFrom = 0;
-        m.value = value;
+        m.value = v;
         if (useNBSend) {
-            if (NBSendMsg(thread, &m) == -1) {
+            if (NBSendMsg(t, &m) == -1) {
                 queue[queue_end].message = m;
-                queue[queue_end].iTo = thread;
+                queue[queue_end].iTo = t;
                 queue_end = (queue_end + 1) % (MAXTHREAD * 100);
                 sem_post(&qSem);  // Signal there is a message in the queue
             }
         } else {
-            SendMsg(thread, &m);
+            SendMsg(t, &m);
         }
     }
-    fclose(file);
 
     if (useNBSend) {
         while (queue_start != queue_end) {
