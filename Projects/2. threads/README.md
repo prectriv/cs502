@@ -8,6 +8,8 @@ This project uses a system of semaphores and mailboxes to add up values. Each th
 - use the EOF command, ctrl + D to signify you're complete.
 
 ## Compiling
+ Use the makefile provided, or just use the following command
+> `-gcc -Wall mailbox.c`
 
-- Use the makefile provided, or just use the following command
-  - `-gcc -Wall mailbox.c`
+## Running
+> ./mailbox <threadcount> [nb]
