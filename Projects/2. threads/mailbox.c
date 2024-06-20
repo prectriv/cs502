@@ -135,16 +135,16 @@ int main(int argc, char *argv[]) {
     int v, t;
     char buffer[100];
 
-    while (1){
-        if(fgets(buffer, sizeof(buffer), stdin) == NULL){//used ctrl+D
+    while (1) {
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {  // used ctrl+D
             break;
         }
-        if(sscanf(buffer, "%d %d", &v, &t) != 2){ // bad input/empty
+        if (sscanf(buffer, "%d %d", &v, &t) != 2) {  // bad input/empty
             break;
         };
 
         msg m;
-        if(t > numThreads){
+        if (t > numThreads) {
             printf("%d is larger than the maximum thread allocated, %d\n", t, numThreads);
             continue;
         }
