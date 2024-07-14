@@ -14,10 +14,14 @@
 
 using namespace std;
 
-void printFileInfo(const string &path, const string &name, int indent, bool useAccessTime, bool htmlMode, bool showTypeInfo);
-void listDirectory(const string &path, int indent, int maxDepth, int currentDepth, int spaces, bool useAccessTime, bool htmlMode, bool sortAlphabetically, bool showTypeInfo);
-string visualizeSize(off_t size, bool htmlMode);
-string visualizeAge(time_t t, bool useAccessTime, bool htmlMode);
+bool htmlMode = false;
+bool showTypeInfo = false;
+bool useAccessTime = false;
+
+void printFileInfo(const string &path, const string &name, int indent);
+void listDirectory(const string &path, int indent, int maxDepth, int currentDepth, int spaces, bool sortAlphabetically);
+string visualizeSize(off_t size);
+string visualizeAge(time_t t);
 string generateHTMLColor(int ageLevel);
 void printHTMLHeader(const vector<string> &args);
 void printHTMLFooter();
@@ -37,10 +41,7 @@ map<string, string> fileTypeColors = {
 int main(int argc, char *argv[]) {
     int indentSpaces = 4;
     int maxDepth = 2;
-    bool useAccessTime = false;
-    bool htmlMode = false;
     bool sortAlphabetically = false;
-    bool showTypeInfo = false;
     vector<string> files;
     vector<string> args;
 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
             }
         } else if (strncmp(argv[i], "-d=", 3) == 0) {
             maxDepth = atoi(argv[i] + 3);
-            if (maxDepth < 0 || maxDepth > 8) {
+            if (!maxDepth || maxDepth < 0 || maxDepth > 8) {
                 cerr << "Recursion depth should be in the range of 0 to 8." << endl;
                 return 1;
             }
@@ -79,7 +80,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (files.empty()) {
-        listDirectory(".", 0, maxDepth, 0, indentSpaces, useAccessTime, htmlMode, sortAlphabetically, showTypeInfo);
+        listDirectory(".", 0, maxDepth, 0, indentSpaces, sortAlphabetically);
     } else {
         for (const auto &file : files) {
             struct stat fileInfo;
@@ -93,9 +94,9 @@ int main(int argc, char *argv[]) {
                 } else {
                     cout << file << "/" << endl;
                 }
-                listDirectory(file, 1, maxDepth, 1, indentSpaces, useAccessTime, htmlMode, sortAlphabetically, showTypeInfo);
+                listDirectory(file, 1, maxDepth, 1, indentSpaces, sortAlphabetically);
             } else {
-                printFileInfo("", file, 0, useAccessTime, htmlMode, showTypeInfo);
+                printFileInfo("", file, 0);
             }
         }
     }
@@ -110,13 +111,16 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void printFileInfo(const string &path, const string &name, int indent, bool useAccessTime, bool htmlMode, bool showTypeInfo) {
+void printFileInfo(const string &path, const string &name, int indent) {
     struct stat fileInfo;
-    string fullPath = path + "/" + name;
+    string fullPath = name;
 
     if (lstat(fullPath.c_str(), &fileInfo) < 0) {
-        perror("lstat");
-        return;
+        fullPath = path + "/" + name;
+        if (lstat(fullPath.c_str(), &fileInfo)) {
+            perror(("lstat " + fullPath).c_str());
+            return;
+        }
     }
 
     for (int i = 0; i < indent; ++i) {
@@ -134,8 +138,8 @@ void printFileInfo(const string &path, const string &name, int indent, bool useA
         fileName += "@";
     }
 
-    string size = visualizeSize(fileInfo.st_size, htmlMode);
-    string age = visualizeAge(useAccessTime ? fileInfo.st_atime : fileInfo.st_mtime, useAccessTime, htmlMode);
+    string size = visualizeSize(fileInfo.st_size);
+    string age = visualizeAge(useAccessTime ? fileInfo.st_atime : fileInfo.st_mtime);
 
     if (htmlMode) {
         cout << "<p style='margin-left:" << indent * 2 << "px;'>" << size << " " << age << " " << fileName;
@@ -160,7 +164,7 @@ void printFileInfo(const string &path, const string &name, int indent, bool useA
     }
 }
 
-void listDirectory(const string &path, int indent, int maxDepth, int currentDepth, int spaces, bool useAccessTime, bool htmlMode, bool sortAlphabetically, bool showTypeInfo) {
+void listDirectory(const string &path, int indent, int maxDepth, int currentDepth, int spaces, bool sortAlphabetically) {
     DIR *dir;
     struct dirent *entry;
     vector<string> entries;
@@ -177,24 +181,24 @@ void listDirectory(const string &path, int indent, int maxDepth, int currentDept
     }
 
     for (const auto &entryName : entries) {
-        printFileInfo(path, entryName, indent * spaces, useAccessTime, htmlMode, showTypeInfo);
+        printFileInfo(path, entryName, indent * spaces);
 
         string fullPath = path + "/" + entryName;
         struct stat fileInfo;
         if (lstat(fullPath.c_str(), &fileInfo) < 0) {
-            perror("lstat");
+            perror(("lstat " + fullPath).c_str());
             continue;
         }
 
         if (S_ISDIR(fileInfo.st_mode) && currentDepth < maxDepth) {
-            listDirectory(fullPath, indent + 1, maxDepth, currentDepth + 1, spaces, useAccessTime, htmlMode, sortAlphabetically, showTypeInfo);
+            listDirectory(fullPath, indent + 1, maxDepth, currentDepth + 1, spaces, sortAlphabetically);
         }
     }
 
     closedir(dir);
 }
 
-string visualizeSize(off_t size, bool htmlMode) {
+string visualizeSize(off_t size) {
     if (!htmlMode) {
         int hashes = 0;
         string result;
@@ -236,7 +240,7 @@ string visualizeSize(off_t size, bool htmlMode) {
     }
 }
 
-string visualizeAge(time_t fileTime, bool useAccessTime, bool htmlMode) {
+string visualizeAge(time_t fileTime) {
     time_t now = time(nullptr);
     double diff = difftime(now, fileTime);
     string result;
